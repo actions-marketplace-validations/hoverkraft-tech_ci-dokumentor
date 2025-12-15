@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   clean:
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/prune-pull-requests-images-tags.yml@6b0d5ca498b7a533b43e1f2e8d988678d164a429 # 0.29.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/prune-pull-requests-images-tags.yml@3256ec78f48fdaa4c9691c87dc7136fa561c456e # 0.30.3
     permissions:
       contents: read
       id-token: write
@@ -51,17 +51,17 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@32a69b7b8fd5f7ab7bf656e7e88aa90ad235cf8d # 0.18.0
+        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@25ef8d971c0a866fb9e5d90130c7aaa084619df6 # 0.21.0
 
       - name: Download package tarball
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: package-tarball
+          artifact-ids: ${{ needs.ci.outputs.package-tarball-artifact-id }}
           path: .
 
       - name: Publish CLI to npm
@@ -86,9 +86,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.url }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          artifact-ids: ${{ needs.ci.outputs.build-artifact-id }}
+          path: /
 
       - id: generate-readme
         uses: ./
@@ -126,13 +131,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           format-link: full
 
-      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: generate-token
         with:
           app-id: ${{ vars.CI_BOT_APP_ID }}
           private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@753288393de1f3d92f687a6761d236ca800f5306 # 0.28.1
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
           branch: docs/action-documentation-update
@@ -145,7 +150,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@ecafdeac18a6a6dcc01058cd53ac7431bedb5c3b # 0.14.1
+        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@44e0f1bacebf3711bf90895fc45d815e9fe582e8 # 0.18.0
         with:
           build-path: packages/docs/build
-          build-artifact-name: build

@@ -11,12 +11,18 @@ on:
       image-tag:
         description: The image tag for the CI Dokumentor CLI
         value: ${{ fromJSON(jobs.docker.outputs.built-images).cli.tags[0] }}
+      package-tarball-artifact-id:
+        description: The artifact ID for the package tarball
+        value: ${{ jobs.package-test.outputs.package-tarball-artifact-id }}
+      build-artifact-id:
+        description: The artifact ID for the build output
+        value: ${{ jobs.nodejs.outputs.build-artifact-id }}
 
 permissions: {}
 
 jobs:
   linter:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@753288393de1f3d92f687a6761d236ca800f5306 # 0.28.1
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
     permissions:
       actions: read
       contents: read
@@ -32,10 +38,11 @@ jobs:
         VALIDATE_TSX=false
 
   nodejs:
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@32a69b7b8fd5f7ab7bf656e7e88aa90ad235cf8d # 0.18.0
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@25ef8d971c0a866fb9e5d90130c7aaa084619df6 # 0.21.0
     permissions:
       contents: read
       id-token: write
+      packages: read
       pull-requests: write
       security-events: write
     with:
@@ -52,16 +59,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      package-tarball-artifact-id: ${{ steps.upload-package-tarball-artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@32a69b7b8fd5f7ab7bf656e7e88aa90ad235cf8d # 0.18.0
+        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@25ef8d971c0a866fb9e5d90130c7aaa084619df6 # 0.21.0
 
       - name: Download build artifacts
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           artifact-ids: ${{ needs.nodejs.outputs.build-artifact-id }}
           path: /
@@ -99,7 +108,7 @@ jobs:
       - name: Test help command
         run: npx ci-dokumentor --help
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -114,14 +123,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload package tarball
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        id: upload-package-tarball-artifact
         with:
           name: package-tarball
           path: ${{ runner.temp }}/ci-dokumentor-cli-*.tgz
 
   docker:
     needs: [linter, nodejs]
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@6b0d5ca498b7a533b43e1f2e8d988678d164a429 # 0.29.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@3256ec78f48fdaa4c9691c87dc7136fa561c456e # 0.30.3
     permissions:
       contents: read
       issues: read
@@ -161,7 +171,7 @@ jobs:
       # Test help command
       - run: docker run --rm "$IMAGE" --help
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -186,7 +196,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 

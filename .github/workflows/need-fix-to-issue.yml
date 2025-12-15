@@ -17,15 +17,11 @@ on:
           before it; to go back further, enter an earlier SHA here"
         required: false
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions: {}
 
 jobs:
   main:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/need-fix-to-issue.yml@753288393de1f3d92f687a6761d236ca800f5306 # 0.28.1
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/need-fix-to-issue.yml@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
     permissions:
       contents: read
       issues: write
