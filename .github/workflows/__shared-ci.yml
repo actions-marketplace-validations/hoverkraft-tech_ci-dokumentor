@@ -22,7 +22,7 @@ permissions: {}
 
 jobs:
   linter:
-    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@666b7b6eb000db3e8614647871fa60c9f1eb7179 # 0.31.4
+    uses: hoverkraft-tech/ci-github-common/.github/workflows/linter.yml@a8d9ca49a0e025238acd97ee3c5014f4d6525bc3 # 0.31.5
     permissions:
       actions: read
       contents: read
@@ -38,7 +38,7 @@ jobs:
         VALIDATE_TSX=false
 
   nodejs:
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@25ef8d971c0a866fb9e5d90130c7aaa084619df6 # 0.21.0
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/continuous-integration.yml@009e0e9d11a45eda39342243a14a4e5c3c6eaef3 # 0.21.1
     permissions:
       contents: read
       id-token: write
@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@25ef8d971c0a866fb9e5d90130c7aaa084619df6 # 0.21.0
+        uses: hoverkraft-tech/ci-github-nodejs/actions/setup-node@009e0e9d11a45eda39342243a14a4e5c3c6eaef3 # 0.21.1
 
       - name: Download build artifacts
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
@@ -131,7 +131,7 @@ jobs:
 
   docker:
     needs: [linter, nodejs]
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@18c35d287eb2f66e00741c88954106b44b812ae0 # 0.30.4
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/docker-build-images.yml@67e5563d6681bb610c1c961eecb6dfcd5b3cc62f # 0.30.5
     permissions:
       contents: read
       issues: read
