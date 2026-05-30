@@ -4,11 +4,20 @@ import { FormatterService } from './formatter/formatter.service.js';
 import { MarkdownFormatterAdapter } from './formatter/markdown/markdown-formatter.adapter.js';
 import { FORMATTER_ADAPTER_IDENTIFIER } from './formatter/formatter.adapter.js';
 import { RepositoryService } from './repository/repository.service.js';
-import { LicenseService } from './license/license.service.js';
+import {
+  LicenseService,
+  LICENSE_SERVICE_IDENTIFIER,
+} from './license/license.service.js';
 import { FileRendererAdapter } from './renderer/file-renderer.adapter.js';
 import { DiffRendererAdapter } from './renderer/diff-renderer.adapter.js';
-import { FileReaderAdapter } from './reader/file-reader.adapter.js';
-import { VersionService } from './version/version.service.js';
+import {
+  FileReaderAdapter,
+  FILE_READER_ADAPTER_IDENTIFIER,
+} from './reader/file-reader.adapter.js';
+import {
+  VersionService,
+  VERSION_SERVICE_IDENTIFIER,
+} from './version/version.service.js';
 import { MigrationService } from './migration/migration.service.js';
 import { ConcurrencyService } from './concurrency/concurrency.service.js';
 import { MarkdownTableGenerator } from './formatter/markdown/markdown-table.generator.js';
@@ -27,42 +36,37 @@ export function resetContainer(): void {
 export function initContainer(
   baseContainer: Container | undefined = undefined
 ): Container {
-  if (baseContainer) {
-    // When a base container is provided, always use it and set it as our singleton
-    container = baseContainer;
-  } else if (container) {
-    // Only return existing singleton if no base container is provided
-    return container;
-  } else {
-    container = new InversifyContainer();
-  }
+  const targetContainer = baseContainer ?? (container ??= new InversifyContainer());
 
-  // Return early if services are already bound
-  if (container.isBound(FormatterService)) {
-    return container;
+  // Return early if this package has already been initialized in this container.
+  if (targetContainer.isCurrentBound(FormatterService)) {
+    return targetContainer;
   }
 
   // Bind core services only - no dependencies on other packages
-  container.bind(FormatterService).toSelf().inSingletonScope();
-  container.bind(GeneratorService).toSelf().inSingletonScope();
-  container.bind(FileReaderAdapter).toSelf().inSingletonScope();
-  container.bind(FileRendererAdapter).toSelf().inTransientScope();
-  container.bind(DiffRendererAdapter).toSelf().inTransientScope();
-  container.bind<RendererFactory>(RENDERER_FACTORY_IDENTIFIER).toFactory(containerRendererFactory);
-  container.bind(RepositoryService).toSelf().inSingletonScope();
-  container.bind(LicenseService).toSelf().inSingletonScope();
-  container.bind(VersionService).toSelf().inSingletonScope();
-  container.bind(MigrationService).toSelf().inSingletonScope();
-  container.bind(ConcurrencyService).toSelf().inSingletonScope();
+  targetContainer.bind(FormatterService).toSelf().inSingletonScope();
+  targetContainer.bind(GeneratorService).toSelf().inSingletonScope();
+  targetContainer.bind(FileReaderAdapter).toSelf().inSingletonScope();
+  targetContainer.bind(FILE_READER_ADAPTER_IDENTIFIER).toService(FileReaderAdapter);
+  targetContainer.bind(FileRendererAdapter).toSelf().inTransientScope();
+  targetContainer.bind(DiffRendererAdapter).toSelf().inTransientScope();
+  targetContainer.bind<RendererFactory>(RENDERER_FACTORY_IDENTIFIER).toFactory(containerRendererFactory);
+  targetContainer.bind(RepositoryService).toSelf().inSingletonScope();
+  targetContainer.bind(LicenseService).toSelf().inSingletonScope();
+  targetContainer.bind(LICENSE_SERVICE_IDENTIFIER).toService(LicenseService);
+  targetContainer.bind(VersionService).toSelf().inSingletonScope();
+  targetContainer.bind(VERSION_SERVICE_IDENTIFIER).toService(VersionService);
+  targetContainer.bind(MigrationService).toSelf().inSingletonScope();
+  targetContainer.bind(ConcurrencyService).toSelf().inSingletonScope();
 
   // Formatter adapters
-  container.bind(MarkdownLinkGenerator).toSelf().inSingletonScope();
-  container.bind(MarkdownTableGenerator).toSelf().inSingletonScope();
-  container.bind(MarkdownCodeGenerator).toSelf().inSingletonScope();
-  container.bind(MarkdownFormatterAdapter).toSelf().inSingletonScope();
-  container
+  targetContainer.bind(MarkdownLinkGenerator).toSelf().inSingletonScope();
+  targetContainer.bind(MarkdownTableGenerator).toSelf().inSingletonScope();
+  targetContainer.bind(MarkdownCodeGenerator).toSelf().inSingletonScope();
+  targetContainer.bind(MarkdownFormatterAdapter).toSelf().inSingletonScope();
+  targetContainer
     .bind<MarkdownFormatterAdapter>(FORMATTER_ADAPTER_IDENTIFIER)
-    .to(MarkdownFormatterAdapter);
+    .toService(MarkdownFormatterAdapter);
 
-  return container;
+  return targetContainer;
 }
