@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   clean:
-    uses: hoverkraft-tech/ci-github-container/.github/workflows/prune-pull-requests-images-tags.yml@2b647ed6f11d50cb6beb6d56333e68ba2c804826 # 0.33.1
+    uses: hoverkraft-tech/ci-github-container/.github/workflows/prune-pull-requests-images-tags.yml@c9088e8447c5a8be45157e17701023fc50ccb1c0 # 0.37.2
     permissions:
       contents: read
       packages: write
@@ -46,7 +46,7 @@ jobs:
     name: Publish package to npm
     needs: ci
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/release.yml@a10d5e32daef8e060c49fe617833fb0d53476f22 # 0.24.0
+    uses: hoverkraft-tech/ci-github-nodejs/.github/workflows/release.yml@df348077afa4e79725151d50606e9dc63f86dcb6 # 0.24.4
     permissions:
       contents: read
       packages: write
@@ -67,7 +67,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.url }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -124,7 +124,7 @@ jobs:
           client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
           private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
 
-      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@4c9d51717dc04d823dac2dc9ac2857e7b3069454 # 0.35.0
+      - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@624be17604ee0a7378488191aacb35851e7cf001 # 0.37.1
         with:
           github-token: ${{ steps.generate-token.outputs.token }}
           branch: docs/action-documentation-update
@@ -137,6 +137,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@2c8e24b416226074aea1e240468f043edefc5760 # 0.23.2
+        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@b2562b46714e535a0113f90f554b55e1248212c1 # 0.26.3
         with:
           build-path: packages/docs/build
