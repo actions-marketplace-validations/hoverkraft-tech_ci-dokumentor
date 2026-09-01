@@ -1,15 +1,30 @@
-import { describe, it, expect, beforeEach, afterEach, Mocked, vi } from 'vitest';
-import { ReadableContent, ReaderAdapter, RepositoryInfo } from '@ci-dokumentor/core';
-import { ReaderAdapterMockFactory, RepositoryInfoMockFactory } from '@ci-dokumentor/core/tests';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  type Mocked,
+  vi,
+} from "vitest";
+import {
+  ReadableContent,
+  type ReaderAdapter,
+  type RepositoryInfo,
+} from "@ci-dokumentor/core";
+import {
+  ReaderAdapterMockFactory,
+  RepositoryInfoMockFactory,
+} from "@ci-dokumentor/core/tests";
 import {
   GitHubActionsParser,
-  GitHubAction,
-  GitHubWorkflow,
-  GitHubActionInput,
-  GitHubActionOutput,
-} from './github-actions-parser.js';
+  type GitHubAction,
+  type GitHubWorkflow,
+  type GitHubActionInput,
+  type GitHubActionOutput,
+} from "./github-actions-parser.js";
 
-describe('GitHubActionsParser', () => {
+describe("GitHubActionsParser", () => {
   let mockReaderAdapter: Mocked<ReaderAdapter>;
   let mockRepositoryInfo: Mocked<RepositoryInfo>;
   let parser: GitHubActionsParser;
@@ -27,11 +42,11 @@ describe('GitHubActionsParser', () => {
     vi.resetAllMocks();
   });
 
-  describe('parseFile', () => {
-    describe('GitHub Actions', () => {
-      it('should parse an action file', async () => {
+  describe("parseFile", () => {
+    describe("GitHub Actions", () => {
+      it("should parse an action file", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `name: Test Action
 description: A test GitHub Action
 author: Test Author
@@ -78,65 +93,86 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubAction;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubAction;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.usesName).toBe('owner/repo');
-        expect(result.name).toBe('Test Action');
-        expect(result.description).toBe('A test GitHub Action');
-        expect(result.author).toBe('Test Author');
-        expect(result.branding).toEqual({ icon: 'activity', color: 'blue' });
+        expect(result.usesName).toBe("owner/repo");
+        expect(result.name).toBe("Test Action");
+        expect(result.description).toBe("A test GitHub Action");
+        expect(result.author).toBe("Test Author");
+        expect(result.branding).toEqual({ icon: "activity", color: "blue" });
 
         expect(result.inputs).toBeDefined();
-        expect((result.inputs as Record<string, GitHubActionInput>)['input-name']).toEqual({
-          description: 'Input description',
+        expect(
+          (result.inputs as Record<string, GitHubActionInput>)["input-name"],
+        ).toEqual({
+          description: "Input description",
           required: true,
-          default: 'default-value',
-          type: 'string',
+          default: "default-value",
+          type: "string",
         });
-        expect((result.inputs as Record<string, GitHubActionInput>)['optional-input']).toEqual({
-          description: 'Optional input',
+        expect(
+          (result.inputs as Record<string, GitHubActionInput>)[
+            "optional-input"
+          ],
+        ).toEqual({
+          description: "Optional input",
           required: false,
-          type: 'choice',
-          options: ['option1', 'option2'],
+          type: "choice",
+          options: ["option1", "option2"],
         });
-        expect((result.inputs as Record<string, GitHubActionInput>)['input-with-multiline-description']).toEqual({
-          description: 'An input\nwith multiline\ndescription\n',
+        expect(
+          (result.inputs as Record<string, GitHubActionInput>)[
+            "input-with-multiline-description"
+          ],
+        ).toEqual({
+          description: "An input\nwith multiline\ndescription\n",
           required: false,
-          type: 'string',
+          type: "string",
         });
-        expect((result.inputs as Record<string, GitHubActionInput>)['input-with-description-with-code-block']).toEqual({
+        expect(
+          (result.inputs as Record<string, GitHubActionInput>)[
+            "input-with-description-with-code-block"
+          ],
+        ).toEqual({
           description:
-            'An input with code block:\n' +
-            '```yaml\n' +
-            'key: value\n' +
-            'list:\n' +
-            '  - item1\n' +
-            '  - item2\n' +
-            '```\n',
+            "An input with code block:\n" +
+            "```yaml\n" +
+            "key: value\n" +
+            "list:\n" +
+            "  - item1\n" +
+            "  - item2\n" +
+            "```\n",
           required: false,
-          type: 'string',
+          type: "string",
         });
 
         expect(result.outputs).toBeDefined();
-        expect((result.outputs as Record<string, GitHubActionOutput>)['output-name']).toEqual({
-          description: 'Output description',
-          value: '${{ steps.step-id.outputs.value }}',
+        expect(
+          (result.outputs as Record<string, GitHubActionOutput>)["output-name"],
+        ).toEqual({
+          description: "Output description",
+          value: "${{ steps.step-id.outputs.value }}",
         });
 
         expect(result.runs).toBeDefined();
-        expect(result.runs.using).toBe('composite');
+        expect(result.runs.using).toBe("composite");
       });
     });
 
-    describe('GitHub Workflows', () => {
+    describe("GitHub Workflows", () => {
       const cases = [
         {
-          title: 'description from multiple comment lines',
+          title: "description from multiple comment lines",
           content: `# Workflow to greet new contributors.
 # Mainly using [First Interaction Action](https://github.com/actions/first-interaction), with some opinionated defaults.
 # - On issue creation, a comment is added to the issue.
@@ -157,15 +193,15 @@ jobs:
       - name: Greet
         uses: actions/first-interaction@v1
 `,
-          expectedName: 'Greetings',
+          expectedName: "Greetings",
           expectedDescription:
-            'Workflow to greet new contributors.\n' +
-            'Mainly using [First Interaction Action](https://github.com/actions/first-interaction), with some opinionated defaults.\n' +
-            '- On issue creation, a comment is added to the issue.\n' +
-            '- On first contribution, a comment is added to the pull request.',
+            "Workflow to greet new contributors.\n" +
+            "Mainly using [First Interaction Action](https://github.com/actions/first-interaction), with some opinionated defaults.\n" +
+            "- On issue creation, a comment is added to the issue.\n" +
+            "- On first contribution, a comment is added to the pull request.",
         },
         {
-          title: 'description with fenced code block',
+          title: "description with fenced code block",
           content: `# This workflow does something important.
 # It uses the following code snippet:
 # \`\`\`yaml
@@ -190,23 +226,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 `,
-          expectedName: 'Code Snippet Workflow',
+          expectedName: "Code Snippet Workflow",
           expectedDescription:
-            'This workflow does something important.\n' +
-            'It uses the following code snippet:\n' +
-            '```yaml\n' +
-            'name: Example\n' +
-            'on: [push]\n' +
-            'jobs:\n' +
-            '  build:\n' +
-            '    runs-on: ubuntu-latest\n' +
-            '    steps:\n' +
-            '      - name: Checkout code\n' +
-            '        uses: actions/checkout@v2\n' +
-            '```\n',
+            "This workflow does something important.\n" +
+            "It uses the following code snippet:\n" +
+            "```yaml\n" +
+            "name: Example\n" +
+            "on: [push]\n" +
+            "jobs:\n" +
+            "  build:\n" +
+            "    runs-on: ubuntu-latest\n" +
+            "    steps:\n" +
+            "      - name: Checkout code\n" +
+            "        uses: actions/checkout@v2\n" +
+            "```\n",
         },
         {
-          title: 'single line description',
+          title: "single line description",
           content: `# Simple workflow description
 name: Simple Workflow
 on: push
@@ -217,11 +253,11 @@ jobs:
       - name: Test
         run: echo "test"
 `,
-          expectedName: 'Simple Workflow',
-          expectedDescription: 'Simple workflow description',
+          expectedName: "Simple Workflow",
+          expectedDescription: "Simple workflow description",
         },
         {
-          title: 'no description comments',
+          title: "no description comments",
           content: `name: No Description Workflow
 on: push
 jobs:
@@ -231,11 +267,11 @@ jobs:
       - name: Test
         run: echo "test"
 `,
-          expectedName: 'No Description Workflow',
+          expectedName: "No Description Workflow",
           expectedDescription: undefined,
         },
         {
-          title: 'empty comments only',
+          title: "empty comments only",
           content: `#
 #
 #
@@ -248,11 +284,11 @@ jobs:
       - name: Test
         run: echo "test"
 `,
-          expectedName: 'Empty Comments Workflow',
+          expectedName: "Empty Comments Workflow",
           expectedDescription: undefined,
         },
         {
-          title: 'comments with empty lines',
+          title: "comments with empty lines",
           content: `# First line of description
 #
 # Second line after empty comment
@@ -267,11 +303,12 @@ jobs:
       - name: Test
         run: echo "test"
 `,
-          expectedName: 'Comments With Spaces',
-          expectedDescription: 'First line of description\n\nSecond line after empty comment\nThird line',
+          expectedName: "Comments With Spaces",
+          expectedDescription:
+            "First line of description\n\nSecond line after empty comment\nThird line",
         },
         {
-          title: 'leading empty lines before comments',
+          title: "leading empty lines before comments",
           content: `
 
 # Description after empty lines
@@ -285,16 +322,25 @@ jobs:
       - name: Test
         run: echo "test"
 `,
-          expectedName: 'Leading Empty Lines',
-          expectedDescription: 'Description after empty lines\nSecond line',
+          expectedName: "Leading Empty Lines",
+          expectedDescription: "Description after empty lines\nSecond line",
         },
       ];
 
-      it.each(cases)('should parse a workflow with $title', async ({ content: fileContent, expectedName, expectedDescription }) => {
+      it.each(cases)("should parse a workflow with $title", async ({
+        content: fileContent,
+        expectedName,
+        expectedDescription,
+      }) => {
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
-        const result = await parser.parseFile('/test/.github/workflows/test.yml', mockRepositoryInfo) as GitHubWorkflow;
+        const result = (await parser.parseFile(
+          "/test/.github/workflows/test.yml",
+          mockRepositoryInfo,
+        )) as GitHubWorkflow;
 
         expect(result).toBeDefined();
         expect(result.name).toBe(expectedName);
@@ -305,9 +351,9 @@ jobs:
         }
       });
 
-      it('should extract and combine description from action manifest and comments', async () => {
+      it("should extract and combine description from action manifest and comments", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `# This is an action comment from the top of the file
 name: Test Action
 description: Action description from field
@@ -316,21 +362,30 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubAction;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubAction;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.name).toBe('Test Action');
-        expect(result.description).toBe('Action description from field\n\nThis is an action comment from the top of the file');
-        expect('description' in result && typeof result.description === 'string').toBe(true);
+        expect(result.name).toBe("Test Action");
+        expect(result.description).toBe(
+          "Action description from field\n\nThis is an action comment from the top of the file",
+        );
+        expect(
+          "description" in result && typeof result.description === "string",
+        ).toBe(true);
       });
 
-      it('should extract description from action comments only when no description field', async () => {
+      it("should extract description from action comments only when no description field", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `# This is an action comment
 # Second line of comment
 name: Test Action
@@ -339,20 +394,27 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubAction;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubAction;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.name).toBe('Test Action');
-        expect(result.description).toBe('This is an action comment\nSecond line of comment');
+        expect(result.name).toBe("Test Action");
+        expect(result.description).toBe(
+          "This is an action comment\nSecond line of comment",
+        );
       });
 
-      it('should use only description field when no comments', async () => {
+      it("should use only description field when no comments", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `name: Test Action
 description: Action description from field
 runs:
@@ -360,20 +422,25 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubAction;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubAction;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.name).toBe('Test Action');
-        expect(result.description).toBe('Action description from field');
+        expect(result.name).toBe("Test Action");
+        expect(result.description).toBe("Action description from field");
       });
 
-      it('should extract multiline description from action comments with code blocks', async () => {
+      it("should extract multiline description from action comments with code blocks", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `# This action does something important.
 # Here's a code example:
 # \`\`\`yaml
@@ -387,14 +454,19 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubAction;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubAction;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.name).toBe('Test Action');
+        expect(result.name).toBe("Test Action");
         expect(result.description).toEqual(`Short description
 
 This action does something important.
@@ -405,9 +477,9 @@ steps:
 \`\`\``);
       });
 
-      it('should parse a complete workflow file', async () => {
+      it("should parse a complete workflow file", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/workflow.yml';
+        const filePath = "/test/.github/workflows/workflow.yml";
         const fileContent = `name: Test Workflow
 on: push
 jobs:
@@ -419,22 +491,27 @@ jobs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubWorkflow;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubWorkflow;
 
         // Assert
         expect(result).toBeDefined();
         expect(result.usesName).toBe(
-          'owner/repo/.github/workflows/workflow.yml'
+          "owner/repo/.github/workflows/workflow.yml",
         );
-        expect(result.name).toBe('Test Workflow');
+        expect(result.name).toBe("Test Workflow");
       });
 
-      it('should parse a workflow without defined name', async () => {
+      it("should parse a workflow without defined name", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/workflow-test.yml';
+        const filePath = "/test/.github/workflows/workflow-test.yml";
         const fileContent = `on: push
 jobs:
   build:
@@ -445,72 +522,94 @@ jobs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
-        const result = await parser.parseFile(filePath, mockRepositoryInfo) as GitHubWorkflow;
+        const result = (await parser.parseFile(
+          filePath,
+          mockRepositoryInfo,
+        )) as GitHubWorkflow;
 
         // Assert
         expect(result).toBeDefined();
-        expect(result.name).toBe('Workflow Test'); // Default name based on file name
+        expect(result.name).toBe("Workflow Test"); // Default name based on file name
       });
     });
 
-    describe('Error handling', () => {
-      it('should throw error for invalid YAML', async () => {
+    describe("Error handling", () => {
+      it("should throw error for invalid YAML", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/invalid.yml';
+        const filePath = "/test/.github/workflows/invalid.yml";
         const fileContent = `invalid: yaml: content`;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act & Assert
-        await expect(parser.parseFile(filePath, mockRepositoryInfo)).rejects.toThrow();
+        await expect(
+          parser.parseFile(filePath, mockRepositoryInfo),
+        ).rejects.toThrow();
       });
 
-      it('should throw error for empty file', async () => {
+      it("should throw error for empty file", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/empty.yml';
+        const filePath = "/test/.github/workflows/empty.yml";
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(''));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(""),
+        );
 
         // Act & Assert
-        await expect(parser.parseFile(filePath, mockRepositoryInfo)).rejects.toThrow();
+        await expect(
+          parser.parseFile(filePath, mockRepositoryInfo),
+        ).rejects.toThrow();
       });
 
-      it('should throw error for plain text when parseable as YAML', async () => {
+      it("should throw error for plain text when parseable as YAML", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/plain-text.yml';
+        const filePath = "/test/.github/workflows/plain-text.yml";
         const fileContent = `This is not a YAML file`;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act & Assert
-        await expect(parser.parseFile(filePath, mockRepositoryInfo)).rejects.toThrow();
+        await expect(
+          parser.parseFile(filePath, mockRepositoryInfo),
+        ).rejects.toThrow();
       });
 
-      it('should throw error for valid YAML but unsupported structure', async () => {
+      it("should throw error for valid YAML but unsupported structure", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/object-without-required-fields.yml';
+        const filePath =
+          "/test/.github/workflows/object-without-required-fields.yml";
         const fileContent = `someField: value
 anotherField: 123
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act & Assert
-        await expect(parser.parseFile(filePath, mockRepositoryInfo)).rejects.toThrow();
+        await expect(
+          parser.parseFile(filePath, mockRepositoryInfo),
+        ).rejects.toThrow();
       });
     });
 
-    describe('Type detection', () => {
-      it('should detect GitHub Action when it has name but no on/jobs properties', async () => {
+    describe("Type detection", () => {
+      it("should detect GitHub Action when it has name but no on/jobs properties", async () => {
         // Arrange
-        const filePath = '/test/action.yml';
+        const filePath = "/test/action.yml";
         const fileContent = `name: Simple Action
 description: A simple GitHub Action
 runs:
@@ -518,21 +617,23 @@ runs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
         const result = await parser.parseFile(filePath, mockRepositoryInfo);
 
         // Assert
         expect(result).toBeDefined();
-        expect('runs' in result).toBe(true); // It's a GitHubAction
-        expect('on' in result).toBe(false);
-        expect('jobs' in result).toBe(false);
+        expect("runs" in result).toBe(true); // It's a GitHubAction
+        expect("on" in result).toBe(false);
+        expect("jobs" in result).toBe(false);
       });
 
-      it('should detect GitHub Workflow when it has on property', async () => {
+      it("should detect GitHub Workflow when it has on property", async () => {
         // Arrange
-        const filePath = '/test/.github/workflows/workflow.yml';
+        const filePath = "/test/.github/workflows/workflow.yml";
         const fileContent = `name: Test Workflow
 on: push
 jobs:
@@ -544,14 +645,16 @@ jobs:
 `;
 
         mockReaderAdapter.resourceExists.mockReturnValue(true);
-        mockReaderAdapter.readResource.mockResolvedValue(new ReadableContent(fileContent));
+        mockReaderAdapter.readResource.mockResolvedValue(
+          new ReadableContent(fileContent),
+        );
 
         // Act
         const result = await parser.parseFile(filePath, mockRepositoryInfo);
 
         // Assert
         expect(result).toBeDefined();
-        expect('on' in result).toBe(true); // It's a GitHubWorkflow
+        expect("on" in result).toBe(true); // It's a GitHubWorkflow
       });
     });
   });

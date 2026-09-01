@@ -5,8 +5,8 @@
 export class ReadableContent {
   static readonly SPACE_CHAR_CODE = 0x20; // ' '
   static readonly TAB_CHAR_CODE = 0x09; // '\t'
-  static readonly NEW_LINE_CHAR_CODE = 0x0A; // '\n'
-  static readonly CARRIAGE_RETURN_CHAR_CODE = 0x0D; // '\r'
+  static readonly NEW_LINE_CHAR_CODE = 0x0a; // '\n'
+  static readonly CARRIAGE_RETURN_CHAR_CODE = 0x0d; // '\r'
 
   // Maximum buffer size (in bytes) allowed for running user-provided RegExp
   // operations. This prevents potential catastrophic backtracking when a
@@ -15,9 +15,11 @@ export class ReadableContent {
   private static readonly REGEX_SAFE_MAX_BYTES = 24 * 1024; // 24 KB
 
   static [Symbol.hasInstance](instance: unknown): boolean {
-    return typeof instance === 'object'
-      && instance !== null
-      && Buffer.isBuffer((instance as { buffer?: unknown }).buffer);
+    return (
+      typeof instance === "object" &&
+      instance !== null &&
+      Buffer.isBuffer((instance as { buffer?: unknown }).buffer)
+    );
   }
 
   private buffer: Buffer;
@@ -27,14 +29,16 @@ export class ReadableContent {
    * @param content - String content, Buffer, or another ReadableContent instance
    */
   constructor(content: string | Buffer | ReadableContent) {
-    if (typeof content === 'string') {
+    if (typeof content === "string") {
       this.buffer = Buffer.from(content);
     } else if (content instanceof ReadableContent) {
       this.buffer = content.buffer;
     } else if (Buffer.isBuffer(content)) {
       this.buffer = content;
     } else {
-      throw new Error('Invalid content type; must be string, Buffer, or ReadableContent, got ' + typeof content);
+      throw new Error(
+        `Invalid content type; must be string, Buffer, or ReadableContent, got ${typeof content}`,
+      );
     }
   }
 
@@ -65,29 +69,31 @@ export class ReadableContent {
    * Convert the content to a UTF-8 string.
    */
   toString() {
-    return this.buffer.toString('utf-8');
+    return this.buffer.toString("utf-8");
   }
 
   /**
- * Check if content starts with the specified value.
- */
+   * Check if content starts with the specified value.
+   */
   startsWith(searchValue: string | ReadableContent, position = 0): boolean {
-    const searchBuffer = searchValue instanceof ReadableContent
-      ? searchValue.buffer
-      : Buffer.from(searchValue);
+    const searchBuffer =
+      searchValue instanceof ReadableContent
+        ? searchValue.buffer
+        : Buffer.from(searchValue);
 
     if (searchBuffer.length > this.buffer.length) {
       return false;
     }
 
     // Ensure the end index is position + searchBuffer.length (end exclusive)
-    return this.buffer.subarray(position, position + searchBuffer.length).equals(searchBuffer);
+    return this.buffer
+      .subarray(position, position + searchBuffer.length)
+      .equals(searchBuffer);
   }
 
   equals(other: string | ReadableContent): boolean {
-    const otherBuffer = other instanceof ReadableContent
-      ? other.buffer
-      : Buffer.from(other);
+    const otherBuffer =
+      other instanceof ReadableContent ? other.buffer : Buffer.from(other);
 
     if (this.buffer.length !== otherBuffer.length) {
       return false;
@@ -137,7 +143,9 @@ export class ReadableContent {
 
     // Avoid running regex on very large inputs.
     if (content.length > ReadableContent.REGEX_SAFE_MAX_BYTES) {
-      throw new Error(`execRegExp called on content larger than ${ReadableContent.REGEX_SAFE_MAX_BYTES} bytes; operation aborted to avoid performance issues.`);
+      throw new Error(
+        `execRegExp called on content larger than ${ReadableContent.REGEX_SAFE_MAX_BYTES} bytes; operation aborted to avoid performance issues.`,
+      );
     }
     return regex.exec(content);
   }
@@ -149,44 +157,62 @@ export class ReadableContent {
    * @return New ReadableContent instance with replacements made
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  replace(searchValue: string | ReadableContent | RegExp, replaceValue: string | ReadableContent | ((substring: string, ...args: any[]) => string)): ReadableContent {
+  replace(
+    searchValue: string | ReadableContent | RegExp,
+    replaceValue:
+      | string
+      | ReadableContent
+      | ((substring: string, ...args: any[]) => string),
+  ): ReadableContent {
     if (this.isEmpty()) {
       return this;
     }
 
-    const search = searchValue instanceof ReadableContent ? searchValue.toString() : searchValue;
+    const search =
+      searchValue instanceof ReadableContent
+        ? searchValue.toString()
+        : searchValue;
 
-    if (typeof replaceValue === 'function') {
+    if (typeof replaceValue === "function") {
       return new ReadableContent(this.toString().replace(search, replaceValue));
     }
 
-    return new ReadableContent(this.toString().replace(
-      search,
-      replaceValue instanceof ReadableContent ? replaceValue.toString() : replaceValue
-    ));
+    return new ReadableContent(
+      this.toString().replace(
+        search,
+        replaceValue instanceof ReadableContent
+          ? replaceValue.toString()
+          : replaceValue,
+      ),
+    );
   }
 
   /**
    * Find the position of the first occurrence of a value.
    */
   search(searchValue: string | ReadableContent | number, offset = 0): number {
-    if (typeof searchValue === 'number') {
+    if (typeof searchValue === "number") {
       return this.buffer.indexOf(searchValue, offset);
     }
-    const searchBuffer = searchValue instanceof ReadableContent
-      ? searchValue.buffer
-      : Buffer.from(searchValue);
+    const searchBuffer =
+      searchValue instanceof ReadableContent
+        ? searchValue.buffer
+        : Buffer.from(searchValue);
 
     return this.buffer.indexOf(searchBuffer, offset);
   }
 
-  searchLast(searchValue: string | ReadableContent | number, offset?: number): number {
-    if (typeof searchValue === 'number') {
+  searchLast(
+    searchValue: string | ReadableContent | number,
+    offset?: number,
+  ): number {
+    if (typeof searchValue === "number") {
       return this.buffer.lastIndexOf(searchValue, offset);
     }
-    const searchBuffer = searchValue instanceof ReadableContent
-      ? searchValue.buffer
-      : Buffer.from(searchValue);
+    const searchBuffer =
+      searchValue instanceof ReadableContent
+        ? searchValue.buffer
+        : Buffer.from(searchValue);
 
     return this.buffer.lastIndexOf(searchBuffer, offset);
   }
@@ -203,8 +229,12 @@ export class ReadableContent {
       return false;
     }
 
-    if (typeof searchValue === 'number') {
-      if (!Number.isInteger(searchValue) || searchValue < 0 || searchValue > 0xFF) {
+    if (typeof searchValue === "number") {
+      if (
+        !Number.isInteger(searchValue) ||
+        searchValue < 0 ||
+        searchValue > 0xff
+      ) {
         return false;
       }
       return this.buffer[position] === searchValue;
@@ -228,7 +258,7 @@ export class ReadableContent {
   /**
    * Append content to this ReadableContent instance.
    * Accepts strings, Buffers, or other ReadableContent instances.
-   * 
+   *
    * @param contents - Content to append
    * @returns This instance for chaining
    */
@@ -243,14 +273,16 @@ export class ReadableContent {
 
     for (const content of contents) {
       let buffer: Buffer;
-      if (typeof content === 'string') {
+      if (typeof content === "string") {
         buffer = Buffer.from(content);
       } else if (content instanceof ReadableContent) {
         buffer = content.buffer;
       } else if (Buffer.isBuffer(content)) {
         buffer = content;
       } else {
-        throw new Error('Invalid content type for append; must be string, Buffer, or ReadableContent');
+        throw new Error(
+          "Invalid content type for append; must be string, Buffer, or ReadableContent",
+        );
       }
 
       buffers.push(buffer);
@@ -312,8 +344,10 @@ export class ReadableContent {
 
     let start = 0;
 
-
-    while (start < this.buffer.length && this.isWhitespace(this.buffer[start])) {
+    while (
+      start < this.buffer.length &&
+      this.isWhitespace(this.buffer[start])
+    ) {
       start++;
     }
 
@@ -325,10 +359,12 @@ export class ReadableContent {
   }
 
   private isWhitespace(byte: number): boolean {
-    return byte === ReadableContent.SPACE_CHAR_CODE // space
-      || byte === ReadableContent.TAB_CHAR_CODE // tab
-      || byte === ReadableContent.NEW_LINE_CHAR_CODE // line feed
-      || byte === ReadableContent.CARRIAGE_RETURN_CHAR_CODE; // carriage return
+    return (
+      byte === ReadableContent.SPACE_CHAR_CODE || // space
+      byte === ReadableContent.TAB_CHAR_CODE || // tab
+      byte === ReadableContent.NEW_LINE_CHAR_CODE || // line feed
+      byte === ReadableContent.CARRIAGE_RETURN_CHAR_CODE
+    ); // carriage return
   }
 
   toUpperCase(): ReadableContent {
@@ -345,7 +381,7 @@ export class ReadableContent {
    * @param escapeChar - Character to use for escaping (default: backslash)
    * @return New ReadableContent instance with escaped content
    */
-  escape(search: string | string[], escapeChar = '\\'): ReadableContent {
+  escape(search: string | string[], escapeChar = "\\"): ReadableContent {
     if (this.isEmpty()) {
       return ReadableContent.empty();
     }
@@ -363,7 +399,10 @@ export class ReadableContent {
 
     const searchBuf = Buffer.from(search);
     // Build replacement buffer: prefix each character with backslash
-    const replaceStr = search.split('').map((c) => escapeChar + c).join('');
+    const replaceStr = search
+      .split("")
+      .map((c) => escapeChar + c)
+      .join("");
     const replaceBuf = Buffer.from(replaceStr);
 
     let result = ReadableContent.empty();
@@ -373,7 +412,9 @@ export class ReadableContent {
     let found = this.buffer.indexOf(searchBuf, idx);
     while (found !== -1) {
       if (found > idx) {
-        result = result.append(new ReadableContent(this.buffer.subarray(idx, found)));
+        result = result.append(
+          new ReadableContent(this.buffer.subarray(idx, found)),
+        );
       }
       result = result.append(new ReadableContent(replaceBuf));
       idx = found + searchBuf.length;
@@ -402,16 +443,16 @@ export class ReadableContent {
     let last = 0;
     for (let i = 0; i < this.buffer.length; i++) {
       const part = this.buffer[i];
-      if (part === 0x26 || part === 0x3C || part === 0x3E) {
+      if (part === 0x26 || part === 0x3c || part === 0x3e) {
         if (i > last) {
           result = result.append(this.slice(last, i));
         }
         if (part === 0x26) {
-          result = result.append('&amp;');
-        } else if (part === 0x3C) {
-          result = result.append('&lt;');
+          result = result.append("&amp;");
+        } else if (part === 0x3c) {
+          result = result.append("&lt;");
         } else {
-          result = result.append('&gt;');
+          result = result.append("&gt;");
         }
         last = i + 1;
       }
@@ -436,7 +477,10 @@ export class ReadableContent {
     const codepoints = Array.from(str);
     const length = codepoints.length;
 
-    const normalizeIndex = (index: number | undefined, defaultValue: number): number => {
+    const normalizeIndex = (
+      index: number | undefined,
+      defaultValue: number,
+    ): number => {
       if (index === undefined) {
         return defaultValue;
       }
@@ -465,7 +509,7 @@ export class ReadableContent {
     byteOffsets[0] = 0;
 
     for (let i = 0; i < length; i++) {
-      const byteLength = Buffer.byteLength(codepoints[i], 'utf8');
+      const byteLength = Buffer.byteLength(codepoints[i], "utf8");
       byteOffsets[i + 1] = byteOffsets[i] + byteLength;
     }
 
@@ -491,14 +535,12 @@ export class ReadableContent {
   /**
    * Split the content into lines based on newline characters.
    * Handles both LF (`\n`) and CRLF (`\r\n`) line endings.
-   * 
+   *
    * @returns Array of ReadableContent instances, each representing a line
    */
   splitLines(): ReadableContent[] {
     if (this.isEmpty()) {
-      return [
-        ReadableContent.empty()
-      ];
+      return [ReadableContent.empty()];
     }
 
     const lines: ReadableContent[] = [];
@@ -506,7 +548,10 @@ export class ReadableContent {
     for (let i = 0; i < this.buffer.length; i++) {
       if (this.buffer[i] === ReadableContent.NEW_LINE_CHAR_CODE) {
         let line = this.buffer.subarray(lineStart, i);
-        if (line.length > 0 && line[line.length - 1] === ReadableContent.CARRIAGE_RETURN_CHAR_CODE) {
+        if (
+          line.length > 0 &&
+          line[line.length - 1] === ReadableContent.CARRIAGE_RETURN_CHAR_CODE
+        ) {
           // Remove trailing CR from a CRLF sequence. Operate on the `line`
           // slice we already created (not on the full buffer) to avoid
           // returning the wrong portion of the underlying buffer.
@@ -518,7 +563,10 @@ export class ReadableContent {
     }
     if (lineStart <= this.buffer.length - 1) {
       let line = this.buffer.subarray(lineStart, this.buffer.length);
-      if (line.length > 0 && line[line.length - 1] === ReadableContent.CARRIAGE_RETURN_CHAR_CODE) {
+      if (
+        line.length > 0 &&
+        line[line.length - 1] === ReadableContent.CARRIAGE_RETURN_CHAR_CODE
+      ) {
         line = line.subarray(0, line.length - 1);
       }
       lines.push(new ReadableContent(line));

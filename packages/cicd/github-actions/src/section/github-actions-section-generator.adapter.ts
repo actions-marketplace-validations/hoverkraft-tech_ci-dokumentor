@@ -1,22 +1,28 @@
-import {
+import type {
   SectionGeneratorAdapter,
   SectionIdentifier,
   SectionOptions,
   SectionGenerationPayload,
   SectionOptionsDescriptors,
   ReadableContent,
-} from '@ci-dokumentor/core';
-import { GitHubAction, GitHubActionsManifest, GitHubWorkflow } from '../github-actions-parser.js';
+} from "@ci-dokumentor/core";
+import type {
+  GitHubAction,
+  GitHubActionsManifest,
+  GitHubWorkflow,
+} from "../github-actions-parser.js";
 
 export abstract class GitHubActionsSectionGeneratorAdapter
-  implements SectionGeneratorAdapter<GitHubActionsManifest> {
-
+  implements SectionGeneratorAdapter<GitHubActionsManifest>
+{
   abstract getSectionIdentifier(): SectionIdentifier;
 
   /**
    * Generate section content using a structured payload object
    */
-  abstract generateSection(payload: SectionGenerationPayload<GitHubActionsManifest>): Promise<ReadableContent>;
+  abstract generateSection(
+    payload: SectionGenerationPayload<GitHubActionsManifest>,
+  ): Promise<ReadableContent>;
 
   /**
    * Provide CLI option descriptors specific to this section generator
@@ -37,29 +43,33 @@ export abstract class GitHubActionsSectionGeneratorAdapter
   protected isGitHubAction(parsed: unknown): parsed is GitHubAction {
     // Validate all required fields for a GitHub Action
     return (
-      'name' in (parsed as GitHubAction) &&
-      typeof (parsed as GitHubAction).name === 'string' &&
-      'runs' in (parsed as GitHubAction) &&
-      typeof (parsed as GitHubAction).runs === 'object' &&
-      'using' in (parsed as GitHubAction).runs &&
-      typeof (parsed as GitHubAction).runs.using === 'string'
+      "name" in (parsed as GitHubAction) &&
+      typeof (parsed as GitHubAction).name === "string" &&
+      "runs" in (parsed as GitHubAction) &&
+      typeof (parsed as GitHubAction).runs === "object" &&
+      "using" in (parsed as GitHubAction).runs &&
+      typeof (parsed as GitHubAction).runs.using === "string"
     );
   }
 
   protected isGitHubWorkflow(parsed: unknown): parsed is GitHubWorkflow {
     // Validate all required fields for a GitHub Workflow
     return (
-      'name' in (parsed as GitHubWorkflow) &&
-      typeof (parsed as GitHubWorkflow).name === 'string' &&
-      'on' in (parsed as GitHubWorkflow) &&
-      (typeof (parsed as GitHubWorkflow).on === 'object' ||
+      "name" in (parsed as GitHubWorkflow) &&
+      typeof (parsed as GitHubWorkflow).name === "string" &&
+      "on" in (parsed as GitHubWorkflow) &&
+      (typeof (parsed as GitHubWorkflow).on === "object" ||
         Array.isArray((parsed as GitHubWorkflow).on) ||
-        typeof (parsed as GitHubWorkflow).on === 'string')
+        typeof (parsed as GitHubWorkflow).on === "string")
     );
   }
 
-  protected getWorkflowPermissions(workflow: GitHubWorkflow): Record<string, string> {
-    const permissions: Record<string, string> = { ...(workflow.permissions || {}) };
+  protected getWorkflowPermissions(
+    workflow: GitHubWorkflow,
+  ): Record<string, string> {
+    const permissions: Record<string, string> = {
+      ...(workflow.permissions || {}),
+    };
 
     for (const job of Object.values(workflow.jobs || {})) {
       if (!job.permissions) {
@@ -67,21 +77,30 @@ export abstract class GitHubActionsSectionGeneratorAdapter
       }
 
       for (const [permission, level] of Object.entries(job.permissions)) {
-        permissions[permission] = this.getHigherPermissionLevel(permissions[permission], level);
+        permissions[permission] = this.getHigherPermissionLevel(
+          permissions[permission],
+          level,
+        );
       }
     }
 
     return Object.fromEntries(
-      Object.entries(permissions).sort(([permissionA], [permissionB]) => permissionA.localeCompare(permissionB))
+      Object.entries(permissions).sort(([permissionA], [permissionB]) =>
+        permissionA.localeCompare(permissionB),
+      ),
     );
   }
 
-  private getHigherPermissionLevel(currentLevel: string | undefined, candidateLevel: string): string {
+  private getHigherPermissionLevel(
+    currentLevel: string | undefined,
+    candidateLevel: string,
+  ): string {
     if (!currentLevel) {
       return candidateLevel;
     }
 
-    return this.getPermissionPriority(currentLevel) >= this.getPermissionPriority(candidateLevel)
+    return this.getPermissionPriority(currentLevel) >=
+      this.getPermissionPriority(candidateLevel)
       ? currentLevel
       : candidateLevel;
   }

@@ -1,24 +1,24 @@
 import {
   FILE_READER_ADAPTER_IDENTIFIER,
-  RepositoryInfo,
-  LicenseInfo,
-  ContributingInfo,
-  SecurityInfo,
+  type RepositoryInfo,
+  type LicenseInfo,
+  type ContributingInfo,
+  type SecurityInfo,
   AbstractRepositoryProvider,
-  LicenseService,
+  type LicenseService,
   LICENSE_SERVICE_IDENTIFIER,
-  RepositoryOptionsDescriptors,
-  ManifestVersion,
-} from '@ci-dokumentor/core';
-import type { ReaderAdapter } from '@ci-dokumentor/core';
+  type RepositoryOptionsDescriptors,
+  type ManifestVersion,
+} from "@ci-dokumentor/core";
+import type { ReaderAdapter } from "@ci-dokumentor/core";
 import {
-  GitRepositoryProvider,
+  type GitRepositoryProvider,
   GIT_REPOSITORY_PROVIDER_IDENTIFIER,
-} from '@ci-dokumentor/repository-git';
+} from "@ci-dokumentor/repository-git";
 import { graphql } from "@octokit/graphql";
-import { injectable, inject } from 'inversify';
-import { createTokenAuth, } from '@octokit/auth-token';
-import { RequestParameters } from '@octokit/graphql/types';
+import { injectable, inject } from "inversify";
+import { createTokenAuth } from "@octokit/auth-token";
+import type { RequestParameters } from "@octokit/graphql/types";
 
 type GraphQLClient = typeof graphql;
 
@@ -36,7 +36,8 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
     @inject(GIT_REPOSITORY_PROVIDER_IDENTIFIER)
     private gitRepositoryProvider: GitRepositoryProvider,
     @inject(LICENSE_SERVICE_IDENTIFIER) private licenseService: LicenseService,
-    @inject(FILE_READER_ADAPTER_IDENTIFIER) private readerAdapter: ReaderAdapter,
+    @inject(FILE_READER_ADAPTER_IDENTIFIER)
+    private readerAdapter: ReaderAdapter,
   ) {
     super();
   }
@@ -45,7 +46,7 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
    * Get the platform name identifier for this provider
    */
   getPlatformName(): string {
-    return 'github';
+    return "github";
   }
 
   /**
@@ -62,9 +63,9 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
   getOptions(): RepositoryOptionsDescriptors<GitHubRepositoryProviderOptions> {
     return {
       githubToken: {
-        flags: '--github-token <token>',
-        description: 'Optional GitHub token to authenticate GraphQL requests',
-        env: 'GITHUB_TOKEN',
+        flags: "--github-token <token>",
+        description: "Optional GitHub token to authenticate GraphQL requests",
+        env: "GITHUB_TOKEN",
       },
     };
   }
@@ -100,7 +101,7 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
       }
 
       const parsedUrl = await this.gitRepositoryProvider.getRemoteParsedUrl();
-      return parsedUrl.source === 'github.com';
+      return parsedUrl.source === "github.com";
     } catch {
       return false;
     }
@@ -112,10 +113,10 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
 
   protected async fetchLogo(): Promise<string | undefined> {
     const possibleLogoPaths = [
-      '.github/logo.png',
-      '.github/logo.jpg',
-      '.github/logo.jpeg',
-      '.github/logo.svg',
+      ".github/logo.png",
+      ".github/logo.jpg",
+      ".github/logo.jpeg",
+      ".github/logo.svg",
     ];
 
     for (const path of possibleLogoPaths) {
@@ -128,7 +129,7 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
     const response = await this.graphqlQuery<{
       repository: {
         openGraphImageUrl?: string;
-      }
+      };
     }>(
       `query getOpenGraphImageUrl($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
@@ -147,8 +148,8 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
           name: string;
           spdxId: string;
           url: string;
-        }
-      }
+        };
+      };
     }>(
       `query getLicense($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
@@ -158,7 +159,7 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
             url
           }
         }
-      }`
+      }`,
     );
 
     const licenseInfo = response?.repository?.licenseInfo;
@@ -179,8 +180,8 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
       repository?: {
         contributingGuidelines?: {
           url: string;
-        }
-      }
+        };
+      };
     }>(
       `query getLicense($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
@@ -188,7 +189,7 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
             url
           }
         }
-      }`
+      }`,
     );
 
     const contributingGuidelines = response?.repository?.contributingGuidelines;
@@ -204,13 +205,13 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
     const response = await this.graphqlQuery<{
       repository?: {
         securityPolicyUrl?: string;
-      }
+      };
     }>(
       `query getSecurity($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
           securityPolicyUrl
         }
-      }`
+      }`,
     );
 
     const securityPolicyUrl = response?.repository?.securityPolicyUrl;
@@ -222,7 +223,9 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
     return undefined;
   }
 
-  protected override async fetchLatestVersion(): Promise<ManifestVersion | undefined> {
+  protected override async fetchLatestVersion(): Promise<
+    ManifestVersion | undefined
+  > {
     return this.gitRepositoryProvider.getLatestVersion();
   }
 
@@ -248,16 +251,12 @@ export class GitHubRepositoryProvider extends AbstractRepositoryProvider<GitHubR
   }
 
   private async graphqlQuery<Data>(query: string): Promise<Data> {
-
     const repositoryInfo = await this.getRepositoryInfo();
 
     const graphqlClient = this.getGraphQLClient();
-    return graphqlClient<Data>(
-      query,
-      {
-        owner: repositoryInfo.owner,
-        repo: repositoryInfo.name,
-      }
-    );
+    return graphqlClient<Data>(query, {
+      owner: repositoryInfo.owner,
+      repo: repositoryInfo.name,
+    });
   }
 }

@@ -1,22 +1,22 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   FileRendererAdapter,
-  RepositoryProvider,
-  RendererAdapter,
+  type RepositoryProvider,
+  type RendererAdapter,
   MarkdownFormatterAdapter,
-  FormatterAdapter,
-} from '@ci-dokumentor/core';
-import { GitRepositoryProvider } from '@ci-dokumentor/repository-git';
-import { sanitizeSnapshotContent } from '@ci-dokumentor/core/tests';
-import mockFs, { restore } from 'mock-fs';
-import { initTestContainer } from './container.js';
-import { GitHubActionsGeneratorAdapter } from './github-actions-generator.adapter.js';
+  type FormatterAdapter,
+} from "@ci-dokumentor/core";
+import { GitRepositoryProvider } from "@ci-dokumentor/repository-git";
+import { sanitizeSnapshotContent } from "@ci-dokumentor/core/tests";
+import mockFs, { restore } from "mock-fs";
+import { initTestContainer } from "./container.js";
+import { GitHubActionsGeneratorAdapter } from "./github-actions-generator.adapter.js";
 
-const rootPath = join(__dirname, '../../../..');
+const rootPath = join(__dirname, "../../../..");
 
-describe('GitHubActionsGeneratorAdapter - Integration Tests', () => {
+describe("GitHubActionsGeneratorAdapter - Integration Tests", () => {
   let repositoryProvider: RepositoryProvider;
   let formatterAdapter: FormatterAdapter;
   let rendererAdapter: RendererAdapter;
@@ -31,7 +31,7 @@ describe('GitHubActionsGeneratorAdapter - Integration Tests', () => {
     rendererAdapter = container.get(FileRendererAdapter);
 
     gitHubActionsGeneratorAdapter = container.get(
-      GitHubActionsGeneratorAdapter
+      GitHubActionsGeneratorAdapter,
     );
   });
 
@@ -42,18 +42,18 @@ describe('GitHubActionsGeneratorAdapter - Integration Tests', () => {
     vi.restoreAllMocks();
   });
 
-  describe('getPlatformName', () => {
+  describe("getPlatformName", () => {
     it('should return "github-actions" as platform name', () => {
       // Act
       const result = gitHubActionsGeneratorAdapter.getPlatformName();
 
       // Assert
-      expect(result).toBe('github-actions');
+      expect(result).toBe("github-actions");
     });
   });
 
-  describe('generateDocumentation', () => {
-    it('should generate complete documentation for a GitHub Action', async () => {
+  describe("generateDocumentation", () => {
+    it("should generate complete documentation for a GitHub Action", async () => {
       // Arrange
       const actionYaml = `
 name: 'Build and Deploy'
@@ -92,8 +92,8 @@ runs:
   post: 'scripts/post-deploy.js'
 `;
 
-      const sourcePath = join(rootPath, 'action.yml');
-      const destinationPath = join(rootPath, 'README.md');
+      const sourcePath = join(rootPath, "action.yml");
+      const destinationPath = join(rootPath, "README.md");
 
       // Setup mock file with the action YAML content
       mockFs({
@@ -101,10 +101,7 @@ runs:
       });
 
       // Act
-      await rendererAdapter.initialize(
-        destinationPath,
-        formatterAdapter,
-      );
+      await rendererAdapter.initialize(destinationPath, formatterAdapter);
 
       await gitHubActionsGeneratorAdapter.generateDocumentation({
         source: sourcePath,
@@ -119,16 +116,16 @@ runs:
       // Verify that the README.md file was created and has content
       expect(existsSync(destinationPath)).toBe(true);
 
-      const generatedContent = readFileSync(destinationPath, 'utf-8');
+      const generatedContent = readFileSync(destinationPath, "utf-8");
       expect(generatedContent).toBeDefined();
       expect(generatedContent.length).toBeGreaterThan(0);
 
       // Snapshot test the generated content
       const sanitizedContent = sanitizeSnapshotContent(generatedContent);
-      expect(sanitizedContent).toMatchSnapshot('github-action-documentation');
+      expect(sanitizedContent).toMatchSnapshot("github-action-documentation");
     });
 
-    it('should generate documentation for a CI/CD workflow', async () => {
+    it("should generate documentation for a CI/CD workflow", async () => {
       // Arrange
       const workflowYaml = `
 name: 'CI/CD Pipeline'
@@ -236,9 +233,8 @@ jobs:
           echo "Deploying \${{ needs.build.outputs.image-tag }}"
           echo "Image digest: \${{ needs.build.outputs.image-digest }}"
 `;
-      const sourcePath = join(rootPath, '.github/workflows/ci-cd.yml')
-      const destinationPath = join(rootPath, '.github/workflows/ci-cd.md');
-
+      const sourcePath = join(rootPath, ".github/workflows/ci-cd.yml");
+      const destinationPath = join(rootPath, ".github/workflows/ci-cd.md");
 
       // Setup mock file with the workflow YAML content
       mockFs({
@@ -246,10 +242,7 @@ jobs:
       });
 
       // Act
-      await rendererAdapter.initialize(
-        destinationPath,
-        formatterAdapter,
-      );
+      await rendererAdapter.initialize(destinationPath, formatterAdapter);
 
       await gitHubActionsGeneratorAdapter.generateDocumentation({
         source: sourcePath,
@@ -264,31 +257,31 @@ jobs:
       // Verify that the README.md file was created and has content
       expect(existsSync(destinationPath)).toBe(true);
 
-      const generatedContent = readFileSync(destinationPath, 'utf-8');
+      const generatedContent = readFileSync(destinationPath, "utf-8");
       expect(generatedContent).toBeDefined();
       expect(generatedContent.length).toBeGreaterThan(0);
 
       // Snapshot test the generated content
       const sanitizedContent = sanitizeSnapshotContent(generatedContent);
-      expect(sanitizedContent).toMatchSnapshot('workflow-documentation');
+      expect(sanitizedContent).toMatchSnapshot("workflow-documentation");
     });
   });
 
-  describe('file support validation', () => {
-    it('should correctly identify supported GitHub Action files', () => {
-      const actionFiles = ['action.yml', 'action.yaml'];
+  describe("file support validation", () => {
+    it("should correctly identify supported GitHub Action files", () => {
+      const actionFiles = ["action.yml", "action.yaml"];
 
       actionFiles.forEach((file) => {
         expect(gitHubActionsGeneratorAdapter.supportsSource(file)).toBe(true);
       });
     });
 
-    it('should correctly identify supported GitHub Workflow files', () => {
+    it("should correctly identify supported GitHub Workflow files", () => {
       const workflowFiles = [
-        '.github/workflows/ci.yml',
-        '.github/workflows/ci.yaml',
-        '.github/workflows/deploy.yml',
-        '.github/workflows/release.yaml',
+        ".github/workflows/ci.yml",
+        ".github/workflows/ci.yaml",
+        ".github/workflows/deploy.yml",
+        ".github/workflows/release.yaml",
       ];
 
       workflowFiles.forEach((file) => {
@@ -296,13 +289,13 @@ jobs:
       });
     });
 
-    it('should reject unsupported files', () => {
+    it("should reject unsupported files", () => {
       const unsupportedFiles = [
-        'package.json',
-        'README.md',
-        'config.yml',
-        'action.json',
-        '.github/dependabot.yml',
+        "package.json",
+        "README.md",
+        "config.yml",
+        "action.json",
+        ".github/dependabot.yml",
       ];
 
       unsupportedFiles.forEach((file) => {
@@ -311,47 +304,47 @@ jobs:
     });
   });
 
-  describe('documentation path generation', () => {
-    it('should generate correct paths for GitHub Actions', () => {
+  describe("documentation path generation", () => {
+    it("should generate correct paths for GitHub Actions", () => {
       const testCases = [
-        { input: 'action.yml', expected: 'README.md' },
-        { input: 'action.yaml', expected: 'README.md' },
-        { input: 'subfolder/action.yml', expected: 'subfolder/README.md' },
+        { input: "action.yml", expected: "README.md" },
+        { input: "action.yaml", expected: "README.md" },
+        { input: "subfolder/action.yml", expected: "subfolder/README.md" },
       ];
 
       testCases.forEach(({ input, expected }) => {
         expect(gitHubActionsGeneratorAdapter.getDocumentationPath(input)).toBe(
-          expected
+          expected,
         );
       });
     });
 
-    it('should generate correct paths for GitHub Workflows', () => {
+    it("should generate correct paths for GitHub Workflows", () => {
       const testCases = [
         {
-          input: '.github/workflows/ci.yml',
-          expected: '.github/workflows/ci.md',
+          input: ".github/workflows/ci.yml",
+          expected: ".github/workflows/ci.md",
         },
         {
-          input: '.github/workflows/deploy.yaml',
-          expected: '.github/workflows/deploy.md',
+          input: ".github/workflows/deploy.yaml",
+          expected: ".github/workflows/deploy.md",
         },
         {
-          input: '.github/workflows/release.yml',
-          expected: '.github/workflows/release.md',
+          input: ".github/workflows/release.yml",
+          expected: ".github/workflows/release.md",
         },
       ];
 
       testCases.forEach(({ input, expected }) => {
         expect(gitHubActionsGeneratorAdapter.getDocumentationPath(input)).toBe(
-          expected
+          expected,
         );
       });
     });
   });
 
-  describe('error handling', () => {
-    it('should handle malformed YAML files gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle malformed YAML files gracefully", async () => {
       // Arrange
       const malformedYaml = `
 name: 'Malformed Action'
@@ -366,72 +359,62 @@ runs:
 
       // Setup mock file with malformed YAML
       mockFs({
-        '/test/action.yml': malformedYaml,
+        "/test/action.yml": malformedYaml,
       });
 
       // Act & Assert
-      await rendererAdapter.initialize(
-        '/test/README.md',
-        formatterAdapter,
-      );
+      await rendererAdapter.initialize("/test/README.md", formatterAdapter);
 
       await expect(
         gitHubActionsGeneratorAdapter.generateDocumentation({
-          source: '/test/action.yml',
+          source: "/test/action.yml",
           sections: {},
           rendererAdapter,
           repositoryProvider,
-        })
-      ).rejects.toThrow('Missing closing \'quote at line 3, column 42');
+        }),
+      ).rejects.toThrow("Missing closing 'quote at line 3, column 42");
 
       await rendererAdapter.finalize();
     });
 
-    it('should handle non-existent files gracefully', async () => {
+    it("should handle non-existent files gracefully", async () => {
       // Arrange
       // Setup empty mock file system
       mockFs({});
 
-
       // Act & Assert
-      await rendererAdapter.initialize(
-        '/test/README.md',
-        formatterAdapter,
-      );
+      await rendererAdapter.initialize("/test/README.md", formatterAdapter);
 
       await expect(
         gitHubActionsGeneratorAdapter.generateDocumentation({
-          source: '/test/action.yml',
+          source: "/test/action.yml",
           sections: {},
           rendererAdapter,
           repositoryProvider,
-        })
+        }),
       ).rejects.toThrow('Source file does not exist: "/test/action.yml"');
 
       await rendererAdapter.finalize();
     });
 
-    it('should handle empty YAML files', async () => {
+    it("should handle empty YAML files", async () => {
       // Arrange
       // Setup mock file with empty content
       mockFs({
-        '/test/action.yml': '',
+        "/test/action.yml": "",
       });
 
       // Act
-      await rendererAdapter.initialize(
-        '/test/README.md',
-        formatterAdapter,
-      );
+      await rendererAdapter.initialize("/test/README.md", formatterAdapter);
 
       await expect(
         gitHubActionsGeneratorAdapter.generateDocumentation({
-          source: '/test/action.yml',
+          source: "/test/action.yml",
           sections: {},
           rendererAdapter,
           repositoryProvider,
-        })
-      ).rejects.toThrow('Unsupported source file: /test/action.yml');
+        }),
+      ).rejects.toThrow("Unsupported source file: /test/action.yml");
 
       await rendererAdapter.finalize();
     });

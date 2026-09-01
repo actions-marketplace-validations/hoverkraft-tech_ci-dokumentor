@@ -1,12 +1,14 @@
-import { ManifestVersion } from '../version/version.service.js';
-import type { OptionDescriptor } from '../options/options.js';
-import { LicenseInfo } from '../license/license.service.js';
+import type { ManifestVersion } from "../version/version.service.js";
+import type { OptionDescriptor } from "../options/options.js";
+import type { LicenseInfo } from "../license/license.service.js";
 
-export const REPOSITORY_PROVIDER_IDENTIFIER = Symbol.for('RepositoryProvider');
+export const REPOSITORY_PROVIDER_IDENTIFIER = Symbol.for("RepositoryProvider");
 
 export type RepositoryOptions = Record<string, unknown>;
 
-export type RepositoryOptionsDescriptors<Options extends RepositoryOptions = RepositoryOptions> = Record<keyof Options, OptionDescriptor>;
+export type RepositoryOptionsDescriptors<
+  Options extends RepositoryOptions = RepositoryOptions,
+> = Record<keyof Options, OptionDescriptor>;
 
 /**
  * Basic repository information without optional metadata
@@ -36,8 +38,9 @@ export interface SecurityInfo {
 /**
  * Interface for repository service providers
  */
-export interface RepositoryProvider<Options extends RepositoryOptions = RepositoryOptions> {
-
+export interface RepositoryProvider<
+  Options extends RepositoryOptions = RepositoryOptions,
+> {
   /**
    * Get the platform name identifier for this provider
    * @returns string the platform name (e.g., 'git', 'github')

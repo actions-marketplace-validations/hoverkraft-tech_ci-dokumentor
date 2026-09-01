@@ -1,6 +1,9 @@
-import { FormatterAdapter } from '../../formatter/formatter.adapter.js';
-import { ReadableContent } from '../../reader/readable-content.js';
-import { SectionGenerationPayload, SectionIdentifier } from './section-generator.adapter.js';
+import type { FormatterAdapter } from "../../formatter/formatter.adapter.js";
+import { ReadableContent } from "../../reader/readable-content.js";
+import {
+  type SectionGenerationPayload,
+  SectionIdentifier,
+} from "./section-generator.adapter.js";
 
 /**
  * Input entry with name and properties.
@@ -25,28 +28,31 @@ type AbstractConstructor<T = object> = abstract new (...args: any[]) => T;
  * This section displays input parameters in a table format.
  * Platform-specific implementations provide the input extraction and table generation logic.
  */
-export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>(Base: TBase) {
+export function InputsSectionMixin<
+  TManifest,
+  TBase extends AbstractConstructor,
+>(Base: TBase) {
   abstract class InputsSection extends Base {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(...args: any[]) {
-      super(...args);
-    }
-
     getSectionIdentifier(): SectionIdentifier {
       return SectionIdentifier.Inputs;
     }
 
-    async generateSection({ formatterAdapter, manifest }: SectionGenerationPayload<TManifest>): Promise<ReadableContent> {
-      const inputsContent = await this.generateInputsContent(formatterAdapter, manifest);
+    async generateSection({
+      formatterAdapter,
+      manifest,
+    }: SectionGenerationPayload<TManifest>): Promise<ReadableContent> {
+      const inputsContent = await this.generateInputsContent(
+        formatterAdapter,
+        manifest,
+      );
 
       if (inputsContent.isEmpty()) {
         return ReadableContent.empty();
       }
 
-      return formatterAdapter.heading(new ReadableContent('Inputs'), 2).append(
-        formatterAdapter.lineBreak(),
-        inputsContent,
-      );
+      return formatterAdapter
+        .heading(new ReadableContent("Inputs"), 2)
+        .append(formatterAdapter.lineBreak(), inputsContent);
     }
 
     /**
@@ -55,7 +61,7 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public abstract generateInputsContent(
       formatterAdapter: FormatterAdapter,
-      manifest: TManifest
+      manifest: TManifest,
     ): Promise<ReadableContent>;
 
     /**
@@ -63,10 +69,10 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public formatInputName(
       name: string,
-      formatterAdapter: FormatterAdapter
+      formatterAdapter: FormatterAdapter,
     ): ReadableContent {
       return formatterAdapter.bold(
-        formatterAdapter.inlineCode(new ReadableContent(name))
+        formatterAdapter.inlineCode(new ReadableContent(name)),
       );
     }
 
@@ -75,9 +81,9 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public formatInputDescription(
       description: string | undefined,
-      formatterAdapter: FormatterAdapter
+      formatterAdapter: FormatterAdapter,
     ): ReadableContent {
-      const desc = new ReadableContent((description || '').trim());
+      const desc = new ReadableContent((description || "").trim());
       if (!desc.isEmpty()) {
         return formatterAdapter.paragraph(desc);
       }
@@ -89,16 +95,19 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public formatInputDefault(
       defaultValue: string | boolean | number | null | undefined,
-      formatterAdapter: FormatterAdapter
+      formatterAdapter: FormatterAdapter,
     ): ReadableContent {
-      const hasNotDefault = defaultValue === null || defaultValue === undefined || defaultValue === '';
+      const hasNotDefault =
+        defaultValue === null ||
+        defaultValue === undefined ||
+        defaultValue === "";
       if (hasNotDefault) {
-        return new ReadableContent('-');
+        return new ReadableContent("-");
       }
 
       let defaultStr: string;
-      if (typeof defaultValue === 'boolean') {
-        defaultStr = defaultValue ? 'true' : 'false';
+      if (typeof defaultValue === "boolean") {
+        defaultStr = defaultValue ? "true" : "false";
       } else {
         defaultStr = String(defaultValue);
       }
@@ -111,10 +120,10 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public formatInputRequired(
       required: boolean | undefined,
-      formatterAdapter: FormatterAdapter
+      formatterAdapter: FormatterAdapter,
     ): ReadableContent {
       return formatterAdapter.bold(
-        new ReadableContent(required ? 'true' : 'false')
+        new ReadableContent(required ? "true" : "false"),
       );
     }
 
@@ -123,9 +132,9 @@ export function InputsSectionMixin<TManifest, TBase extends AbstractConstructor>
      */
     public formatInputType(
       type: string | undefined,
-      formatterAdapter: FormatterAdapter
+      formatterAdapter: FormatterAdapter,
     ): ReadableContent {
-      return formatterAdapter.bold(new ReadableContent(type ?? 'string'));
+      return formatterAdapter.bold(new ReadableContent(type ?? "string"));
     }
   }
 

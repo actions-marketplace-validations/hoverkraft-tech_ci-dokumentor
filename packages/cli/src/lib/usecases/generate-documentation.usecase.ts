@@ -1,20 +1,24 @@
-import { inject, injectable } from 'inversify';
+import { inject, injectable } from "inversify";
 import {
-  GenerateSectionsOptions,
-  GeneratorAdapter,
+  type GenerateSectionsOptions,
+  type GeneratorAdapter,
   GeneratorService,
-  RepositoryOptions,
-  RepositoryOptionsDescriptors,
-  RepositoryProvider,
+  type RepositoryOptions,
+  type RepositoryOptionsDescriptors,
+  type RepositoryProvider,
   RepositoryService,
-  SectionOptionsDescriptors,
-  FormatterOptions,
+  type SectionOptionsDescriptors,
+  type FormatterOptions,
   FileReaderAdapter,
-  ConcurrencyService
-} from '@ci-dokumentor/core';
-import type { ReaderAdapter } from '@ci-dokumentor/core';
-import { LoggerService } from '../logger/logger.service.js';
-import { AbstractMultiFileUseCase, FileResult, MultiFileUseCaseOutput } from './abstract-multi-file.usecase.js';
+  ConcurrencyService,
+} from "@ci-dokumentor/core";
+import type { ReaderAdapter } from "@ci-dokumentor/core";
+import { LoggerService } from "../logger/logger.service.js";
+import {
+  AbstractMultiFileUseCase,
+  type FileResult,
+  type MultiFileUseCaseOutput,
+} from "./abstract-multi-file.usecase.js";
 
 export interface GenerateDocumentationUseCaseInput {
   /**
@@ -91,8 +95,8 @@ type GenerateFileResult = FileResult & {
   source: string;
 };
 
-export type GenerateDocumentationUseCaseOutput = MultiFileUseCaseOutput<GenerateFileResult>;
-
+export type GenerateDocumentationUseCaseOutput =
+  MultiFileUseCaseOutput<GenerateFileResult>;
 
 /**
  * Use case for generating documentation from CI/CD manifest files
@@ -107,11 +111,10 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
     @inject(RepositoryService)
     private readonly repositoryService: RepositoryService,
     @inject(FileReaderAdapter) readerAdapter: ReaderAdapter,
-    @inject(ConcurrencyService) concurrencyService: ConcurrencyService
+    @inject(ConcurrencyService) concurrencyService: ConcurrencyService,
   ) {
     super(loggerService, readerAdapter, concurrencyService);
   }
-
 
   /**
    * Get list of supported repository platforms based on registered providers
@@ -130,27 +133,33 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
   /**
    * Detect some extra options for current context and return any CLI options it exposes
    */
-  async getRepositorySupportedOptions(repositoryPlatform?: string): Promise<
-    RepositoryOptionsDescriptors
-  > {
+  async getRepositorySupportedOptions(
+    repositoryPlatform?: string,
+  ): Promise<RepositoryOptionsDescriptors> {
     const options: RepositoryOptionsDescriptors = {};
 
     let repositoryProvider: RepositoryProvider | undefined;
     if (repositoryPlatform) {
-      repositoryProvider = this.repositoryService.getRepositoryProviderByPlatform(repositoryPlatform);
+      repositoryProvider =
+        this.repositoryService.getRepositoryProviderByPlatform(
+          repositoryPlatform,
+        );
     } else {
-      repositoryProvider = await this.repositoryService.autoDetectRepositoryProvider();
+      repositoryProvider =
+        await this.repositoryService.autoDetectRepositoryProvider();
     }
 
     if (repositoryProvider) {
       const repositoryProviderOptions = repositoryProvider.getOptions();
       // Ensure option unicity. Prefer canonical `key` when provided by the
-      // provider; fall back to `flags` otherwise.      
+      // provider; fall back to `flags` otherwise.
       const seenByKey = new Set<string>();
       for (const optionKey of Object.keys(repositoryProviderOptions)) {
         const option = repositoryProviderOptions[optionKey];
         if (seenByKey.has(option.flags)) {
-          throw new Error(`Duplicate option flags found: ${option.flags} - Repository provider: ${repositoryProvider.getPlatformName()}`);
+          throw new Error(
+            `Duplicate option flags found: ${option.flags} - Repository provider: ${repositoryProvider.getPlatformName()}`,
+          );
         }
         seenByKey.add(option.flags);
 
@@ -166,7 +175,7 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
    */
   getSectionSupportedOptions({
     cicdPlatform,
-    source
+    source,
   }: {
     cicdPlatform?: string;
     source?: string | string[];
@@ -176,9 +185,11 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
 
     let generatorAdapter: GeneratorAdapter | undefined;
     if (cicdPlatform) {
-      generatorAdapter = this.generatorService.getGeneratorAdapterByPlatform(cicdPlatform);
+      generatorAdapter =
+        this.generatorService.getGeneratorAdapterByPlatform(cicdPlatform);
     } else if (sourceForDetection) {
-      generatorAdapter = this.generatorService.autoDetectCicdAdapter(sourceForDetection);
+      generatorAdapter =
+        this.generatorService.autoDetectCicdAdapter(sourceForDetection);
     }
 
     if (generatorAdapter) {
@@ -193,7 +204,7 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
    */
   getSupportedSections({
     cicdPlatform,
-    source
+    source,
   }: {
     cicdPlatform?: string;
     source?: string | string[];
@@ -203,9 +214,11 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
 
     let generatorAdapter: GeneratorAdapter | undefined;
     if (cicdPlatform) {
-      generatorAdapter = this.generatorService.getGeneratorAdapterByPlatform(cicdPlatform);
+      generatorAdapter =
+        this.generatorService.getGeneratorAdapterByPlatform(cicdPlatform);
     } else if (sourceForDetection) {
-      generatorAdapter = this.generatorService.autoDetectCicdAdapter(sourceForDetection);
+      generatorAdapter =
+        this.generatorService.autoDetectCicdAdapter(sourceForDetection);
     }
 
     if (generatorAdapter) {
@@ -216,34 +229,35 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
   }
 
   async execute(
-    input: GenerateDocumentationUseCaseInput
+    input: GenerateDocumentationUseCaseInput,
   ): Promise<GenerateDocumentationUseCaseOutput> {
     // Resolve source files from patterns
     const resolvedFiles = await this.resolveFiles(input.source);
 
     if (resolvedFiles.length === 0) {
-      throw new Error(`No source files found matching the provided pattern(s): ${Array.isArray(input.source) ? input.source.join(', ') : input.source}`);
+      throw new Error(
+        `No source files found matching the provided pattern(s): ${Array.isArray(input.source) ? input.source.join(", ") : input.source}`,
+      );
     }
 
     // Validate destination is not provided when processing multiple files
     if (resolvedFiles.length > 1 && input.destination) {
-      throw new Error('--destination option cannot be used when processing multiple files. Destinations will be auto-detected.');
+      throw new Error(
+        "--destination option cannot be used when processing multiple files. Destinations will be auto-detected.",
+      );
     }
 
     const executionContext = this.initializeExecutionContext(
-      'documentation generation',
+      "documentation generation",
       input,
-      resolvedFiles
+      resolvedFiles,
     );
 
-    return this.processFilesConcurrently(
-      input,
-      executionContext
-    );
+    return this.processFilesConcurrently(input, executionContext);
   }
 
   protected async processFile(
-    input: GenerateDocumentationUseCaseInput & { file: string }
+    input: GenerateDocumentationUseCaseInput & { file: string },
   ): Promise<GenerateFileResult> {
     this.validateInput(input);
     this.logExecutionStart(input);
@@ -251,15 +265,16 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
     const generatorAdapter = await this.resolveGeneratorAdapter(input);
     const repositoryProvider = await this.resolveRepositoryProvider(input);
 
-    const { destination, data } = await this.generatorService.generateDocumentationForPlatform({
-      source: input.file,
-      destination: input.destination,
-      dryRun: input.dryRun,
-      sections: input.sections,
-      generatorAdapter,
-      repositoryProvider,
-      formatterOptions: input.formatterOptions,
-    });
+    const { destination, data } =
+      await this.generatorService.generateDocumentationForPlatform({
+        source: input.file,
+        destination: input.destination,
+        dryRun: input.dryRun,
+        sections: input.sections,
+        generatorAdapter,
+        repositoryProvider,
+        formatterOptions: input.formatterOptions,
+      });
 
     this.logExecutionSuccess(input, destination);
 
@@ -274,13 +289,24 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
   /**
    * Log execution start information
    */
-  private logExecutionStart(input: GenerateDocumentationUseCaseInput & { file: string }): void {
-    const prefix = input.dryRun ? '[DRY RUN] ' : '';
-    this.loggerService.info(`${prefix}Starting documentation generation...`, input.outputFormat);
-    this.loggerService.info(`Source manifest: ${input.file}`, input.outputFormat);
+  private logExecutionStart(
+    input: GenerateDocumentationUseCaseInput & { file: string },
+  ): void {
+    const prefix = input.dryRun ? "[DRY RUN] " : "";
+    this.loggerService.info(
+      `${prefix}Starting documentation generation...`,
+      input.outputFormat,
+    );
+    this.loggerService.info(
+      `Source manifest: ${input.file}`,
+      input.outputFormat,
+    );
 
     if (input.destination) {
-      this.loggerService.info(`Destination path: ${input.destination}`, input.outputFormat);
+      this.loggerService.info(
+        `Destination path: ${input.destination}`,
+        input.outputFormat,
+      );
     }
 
     this.logSectionOptions(input);
@@ -294,15 +320,15 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
 
     if (input.sections.includeSections?.length) {
       this.loggerService.info(
-        `Including sections: ${input.sections.includeSections.join(', ')}`,
-        input.outputFormat
+        `Including sections: ${input.sections.includeSections.join(", ")}`,
+        input.outputFormat,
       );
     }
 
     if (input.sections.excludeSections?.length) {
       this.loggerService.info(
-        `Excluding sections: ${input.sections.excludeSections.join(', ')}`,
-        input.outputFormat
+        `Excluding sections: ${input.sections.excludeSections.join(", ")}`,
+        input.outputFormat,
       );
     }
   }
@@ -312,9 +338,12 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
    */
   private logExecutionSuccess(
     input: GenerateDocumentationUseCaseInput,
-    destination: string
+    destination: string,
   ): void {
-    this.loggerService.info('Documentation generated successfully!', input.outputFormat);
+    this.loggerService.info(
+      "Documentation generated successfully!",
+      input.outputFormat,
+    );
 
     const message = input.dryRun
       ? `(Dry-run) Documentation would be saved to: ${destination}`
@@ -323,14 +352,18 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
     this.loggerService.info(message, input.outputFormat);
   }
 
-  private validateInput(input: GenerateDocumentationUseCaseInput & { file: string }): void {
+  private validateInput(
+    input: GenerateDocumentationUseCaseInput & { file: string },
+  ): void {
     if (!input.file) {
-      throw new Error('Source manifest file path is required');
+      throw new Error("Source manifest file path is required");
     }
 
     // Validate that the source exists
     if (!this.readerAdapter.resourceExists(input.file)) {
-      throw new Error(`Source manifest file does not exist or is not a file: ${input.file}`);
+      throw new Error(
+        `Source manifest file does not exist or is not a file: ${input.file}`,
+      );
     }
 
     // Validate repository platform if provided
@@ -338,8 +371,9 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
       const validRepositoryPlatforms = this.getSupportedRepositoryPlatforms();
       if (!validRepositoryPlatforms.includes(input.repository.platform)) {
         throw new Error(
-          `Invalid repository platform '${input.repository.platform
-          }'. Valid platforms: ${validRepositoryPlatforms.join(', ')}`
+          `Invalid repository platform '${
+            input.repository.platform
+          }'. Valid platforms: ${validRepositoryPlatforms.join(", ")}`,
         );
       }
     }
@@ -349,36 +383,46 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
       const validCicdPlatforms = this.getSupportedCicdPlatforms();
       if (!validCicdPlatforms.includes(input.cicd.platform)) {
         throw new Error(
-          `Invalid CI/CD platform '${input.cicd.platform
-          }'. Valid platforms: ${validCicdPlatforms.join(', ')}`
+          `Invalid CI/CD platform '${
+            input.cicd.platform
+          }'. Valid platforms: ${validCicdPlatforms.join(", ")}`,
         );
       }
     }
   }
 
   /**
-   * Auto-detect repository platform if not provided    
+   * Auto-detect repository platform if not provided
    */
-  private async resolveRepositoryProvider(input: GenerateDocumentationUseCaseInput & { file: string }): Promise<RepositoryProvider> {
+  private async resolveRepositoryProvider(
+    input: GenerateDocumentationUseCaseInput & { file: string },
+  ): Promise<RepositoryProvider> {
     let repositoryProviderAdapter: RepositoryProvider | undefined;
     if (input.repository?.platform) {
-      this.loggerService.info(`Repository platform: ${input.repository.platform}`, input.outputFormat);
-      repositoryProviderAdapter = this.repositoryService.getRepositoryProviderByPlatform(input.repository.platform);
+      this.loggerService.info(
+        `Repository platform: ${input.repository.platform}`,
+        input.outputFormat,
+      );
+      repositoryProviderAdapter =
+        this.repositoryService.getRepositoryProviderByPlatform(
+          input.repository.platform,
+        );
       if (!repositoryProviderAdapter) {
         throw new Error(
-          `No repository platform found for '${input.repository.platform}'. Please specify a valid one.`
+          `No repository platform found for '${input.repository.platform}'. Please specify a valid one.`,
         );
       }
     } else {
-      repositoryProviderAdapter = await this.repositoryService.autoDetectRepositoryProvider();
+      repositoryProviderAdapter =
+        await this.repositoryService.autoDetectRepositoryProvider();
       if (!repositoryProviderAdapter) {
         throw new Error(
-          `No repository platform could be auto-detected. Please specify one using --repository option.`
+          `No repository platform could be auto-detected. Please specify one using --repository option.`,
         );
       }
       this.loggerService.info(
         `Auto-detected repository platform: ${repositoryProviderAdapter.getPlatformName()}`,
-        input.outputFormat
+        input.outputFormat,
       );
     }
 
@@ -392,33 +436,39 @@ export class GenerateDocumentationUseCase extends AbstractMultiFileUseCase<Gener
   }
 
   /**
- * Get CI/CD adapter (either from platform input or auto-detect)
- */
-  private async resolveGeneratorAdapter(input: GenerateDocumentationUseCaseInput & { file: string }): Promise<GeneratorAdapter> {
+   * Get CI/CD adapter (either from platform input or auto-detect)
+   */
+  private async resolveGeneratorAdapter(
+    input: GenerateDocumentationUseCaseInput & { file: string },
+  ): Promise<GeneratorAdapter> {
     let generatorAdapter: GeneratorAdapter | undefined;
     if (input.cicd?.platform) {
-      this.loggerService.info(`CI/CD platform: ${input.cicd.platform}`, input.outputFormat);
+      this.loggerService.info(
+        `CI/CD platform: ${input.cicd.platform}`,
+        input.outputFormat,
+      );
       generatorAdapter = this.generatorService.getGeneratorAdapterByPlatform(
-        input.cicd.platform
+        input.cicd.platform,
       );
       if (!generatorAdapter) {
         throw new Error(
-          `No generator adapter found for CI/CD platform '${input.cicd.platform}'`
+          `No generator adapter found for CI/CD platform '${input.cicd.platform}'`,
         );
       }
     } else {
-      generatorAdapter = this.generatorService.autoDetectCicdAdapter(input.file);
+      generatorAdapter = this.generatorService.autoDetectCicdAdapter(
+        input.file,
+      );
       if (!generatorAdapter) {
         throw new Error(
-          `No CI/CD platform could be auto-detected for source '${input.file}'. Please specify one using --cicd option.`
+          `No CI/CD platform could be auto-detected for source '${input.file}'. Please specify one using --cicd option.`,
         );
       }
       this.loggerService.info(
         `Auto-detected CI/CD platform: ${generatorAdapter.getPlatformName()}`,
-        input.outputFormat
+        input.outputFormat,
       );
     }
     return generatorAdapter;
   }
-
 }

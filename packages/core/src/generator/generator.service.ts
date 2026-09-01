@@ -1,14 +1,14 @@
-import { inject, injectable, multiInject } from 'inversify';
-import { FormatterService } from '../formatter/formatter.service.js';
-import { RepositoryProvider } from '../repository/repository.provider.js';
-import { FormatterOptions } from '../formatter/formatter.adapter.js';
-import { RENDERER_FACTORY_IDENTIFIER } from '../renderer/renderer.factory.js';
-import type { RendererFactory } from '../renderer/renderer.factory.js';
+import { inject, injectable, multiInject } from "inversify";
+import { FormatterService } from "../formatter/formatter.service.js";
+import type { RepositoryProvider } from "../repository/repository.provider.js";
+import type { FormatterOptions } from "../formatter/formatter.adapter.js";
+import { RENDERER_FACTORY_IDENTIFIER } from "../renderer/renderer.factory.js";
+import type { RendererFactory } from "../renderer/renderer.factory.js";
 import {
-  GenerateSectionsOptions,
+  type GenerateSectionsOptions,
   GENERATOR_ADAPTER_IDENTIFIER,
-  GeneratorAdapter,
-} from './generator.adapter.js';
+  type GeneratorAdapter,
+} from "./generator.adapter.js";
 
 @injectable()
 export class GeneratorService {
@@ -18,8 +18,8 @@ export class GeneratorService {
     @inject(RENDERER_FACTORY_IDENTIFIER)
     private readonly rendererFactory: RendererFactory,
     @multiInject(GENERATOR_ADAPTER_IDENTIFIER)
-    private readonly generatorAdapters: GeneratorAdapter[]
-  ) { }
+    private readonly generatorAdapters: GeneratorAdapter[],
+  ) {}
 
   /**
    * Get list of supported CI/CD platforms based on registered generator adapters
@@ -32,10 +32,10 @@ export class GeneratorService {
    * Get generator adapter for a specific platform
    */
   getGeneratorAdapterByPlatform(
-    platform: string
+    platform: string,
   ): GeneratorAdapter | undefined {
     return this.generatorAdapters.find(
-      (adapter) => adapter.getPlatformName() === platform
+      (adapter) => adapter.getPlatformName() === platform,
     );
   }
 
@@ -86,12 +86,14 @@ export class GeneratorService {
     // Check if the adapter supports the source path
     if (!generatorAdapter.supportsSource(source)) {
       throw new Error(
-        `CI/CD platform '${generatorAdapter.getPlatformName()}' does not support source '${source}'`
+        `CI/CD platform '${generatorAdapter.getPlatformName()}' does not support source '${source}'`,
       );
     }
 
-    const destinationPath = destination ?? generatorAdapter.getDocumentationPath(source);
-    const formatterAdapter = this.formatterService.getFormatterAdapterForFile(destinationPath);
+    const destinationPath =
+      destination ?? generatorAdapter.getDocumentationPath(source);
+    const formatterAdapter =
+      this.formatterService.getFormatterAdapterForFile(destinationPath);
 
     // Set formatter options before initializing renderer
     formatterAdapter.setOptions(formatterOptions);

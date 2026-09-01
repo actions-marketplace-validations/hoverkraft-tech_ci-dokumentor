@@ -1,8 +1,11 @@
-import { relative, dirname } from 'node:path';
-import { FormatterAdapter } from '../../formatter/formatter.adapter.js';
-import { ReadableContent } from '../../reader/readable-content.js';
-import { RepositoryInfo } from '../../repository/repository.provider.js';
-import { SectionGenerationPayload, SectionIdentifier } from './section-generator.adapter.js';
+import { relative, dirname } from "node:path";
+import type { FormatterAdapter } from "../../formatter/formatter.adapter.js";
+import { ReadableContent } from "../../reader/readable-content.js";
+import type { RepositoryInfo } from "../../repository/repository.provider.js";
+import {
+  type SectionGenerationPayload,
+  SectionIdentifier,
+} from "./section-generator.adapter.js";
 
 /**
  * Mixin type for Header section generator.
@@ -15,17 +18,20 @@ type Constructor<T = object> = abstract new (...args: any[]) => T;
  * This section displays the title and logo at the top of documentation.
  * Platform-specific implementations provide title generation logic.
  */
-export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: TBase) {
+export function HeaderSectionMixin<TManifest, TBase extends Constructor>(
+  Base: TBase,
+) {
   abstract class HeaderSectionGeneratorBase extends Base {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(...args: any[]) {
-      super(...args);
-    }
     getSectionIdentifier(): SectionIdentifier {
       return SectionIdentifier.Header;
     }
 
-    async generateSection({ formatterAdapter, manifest, repositoryProvider, destination }: SectionGenerationPayload<TManifest>): Promise<ReadableContent> {
+    async generateSection({
+      formatterAdapter,
+      manifest,
+      repositoryProvider,
+      destination,
+    }: SectionGenerationPayload<TManifest>): Promise<ReadableContent> {
       const [repositoryInfo, logo] = await Promise.all([
         repositoryProvider.getRepositoryInfo(),
         repositoryProvider.getLogo(),
@@ -34,14 +40,14 @@ export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: T
       let sectionContent = this.generateTitle(
         formatterAdapter,
         manifest,
-        repositoryInfo
+        repositoryInfo,
       );
 
       const logoContent = this.generateLogoImpl(
         formatterAdapter,
         manifest,
         logo,
-        destination
+        destination,
       );
 
       if (!logoContent.isEmpty()) {
@@ -68,12 +74,14 @@ export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: T
     public generateTitle(
       _formatterAdapter: FormatterAdapter,
       _manifest: TManifest,
-      _repositoryInfo: RepositoryInfo
+      _repositoryInfo: RepositoryInfo,
     ): ReadableContent {
       void _formatterAdapter;
       void _manifest;
       void _repositoryInfo;
-      throw new Error('generateTitle() must be implemented by platform-specific class');
+      throw new Error(
+        "generateTitle() must be implemented by platform-specific class",
+      );
     }
 
     /**
@@ -85,7 +93,7 @@ export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: T
       formatterAdapter: FormatterAdapter,
       manifest: TManifest,
       logoPath: string | undefined,
-      destination: string | undefined
+      destination: string | undefined,
     ): ReadableContent {
       if (!logoPath) {
         return ReadableContent.empty();
@@ -93,20 +101,24 @@ export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: T
 
       // Calculate relative path for file:// URLs
       let resolvedLogoPath = logoPath;
-      if (logoPath.startsWith('file://') && destination) {
-        const filePath = logoPath.replace(/^file:\/\//, '');
+      if (logoPath.startsWith("file://") && destination) {
+        const filePath = logoPath.replace(/^file:\/\//, "");
         const destinationDir = dirname(destination);
         resolvedLogoPath = relative(destinationDir, filePath);
-      } else if (logoPath.startsWith('file://')) {
+      } else if (logoPath.startsWith("file://")) {
         // If no destination, just remove the file:// prefix
-        resolvedLogoPath = logoPath.replace(/^file:\/\//, '');
+        resolvedLogoPath = logoPath.replace(/^file:\/\//, "");
       }
 
       const logoAltText = this.getLogoAltText(manifest);
-      const logoImage = formatterAdapter.image(new ReadableContent(resolvedLogoPath), logoAltText, {
-        width: '60px',
-        align: 'center',
-      });
+      const logoImage = formatterAdapter.image(
+        new ReadableContent(resolvedLogoPath),
+        logoAltText,
+        {
+          width: "60px",
+          align: "center",
+        },
+      );
 
       return formatterAdapter.center(logoImage);
     }
@@ -117,7 +129,9 @@ export function HeaderSectionMixin<TManifest, TBase extends Constructor>(Base: T
      */
     public getLogoAltText(_manifest: TManifest): ReadableContent {
       void _manifest;
-      throw new Error('getLogoAltText() must be implemented by platform-specific class');
+      throw new Error(
+        "getLogoAltText() must be implemented by platform-specific class",
+      );
     }
   }
 

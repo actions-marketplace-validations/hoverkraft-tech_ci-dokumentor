@@ -1,8 +1,5 @@
 # Multi-stage build: build & pack then install globally in a minimal runtime image
-FROM node:24-alpine AS builder
-
-# Use pnpm for fast installs and reproducible builds
-RUN corepack enable pnpm
+FROM node:26-alpine AS builder
 
 WORKDIR /build
 
@@ -17,12 +14,16 @@ COPY packages/repository/git/package.json ./packages/repository/git/
 COPY packages/repository/github/package.json ./packages/repository/github/
 COPY packages/repository/gitlab/package.json ./packages/repository/gitlab/
 
+# Install the repo-pinned pnpm version explicitly because recent Node Alpine
+# images do not always bundle corepack.
+RUN npm install --global "pnpm@$(node -p 'require("./package.json").packageManager.replace(/^pnpm@/, "")')"
+
 # Install all deps (including dev) for building
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source and build configs
 COPY ./packages ./packages
-COPY ./nx.json ./tsconfig.base.json ./tsconfig.json ./vite.shared.ts ./
+COPY ./nx.json ./tsconfig.base.json ./tsconfig.json ./vite.shared.mjs ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm build --exclude=docs --verbose
 
 # Pack the CLI package to a single tarball for an efficient, cache-friendly install
@@ -32,7 +33,7 @@ RUN mkdir -p /pack && \
     npm pack --pack-destination /pack
 
 # Final runtime image: minimal, with the CLI installed globally
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
 # Install minimal runtime deps
 # hadolint ignore=DL3018

@@ -1,8 +1,11 @@
-import { RendererAdapter } from '../renderer/renderer.adapter.js';
-import { RepositoryProvider } from '../repository/repository.provider.js';
-import { SectionOptions, SectionOptionsDescriptors } from './section/section-generator.adapter.js';
+import type { RendererAdapter } from "../renderer/renderer.adapter.js";
+import type { RepositoryProvider } from "../repository/repository.provider.js";
+import type {
+  SectionOptions,
+  SectionOptionsDescriptors,
+} from "./section/section-generator.adapter.js";
 
-export const GENERATOR_ADAPTER_IDENTIFIER = Symbol.for('GeneratorAdapter');
+export const GENERATOR_ADAPTER_IDENTIFIER = Symbol.for("GeneratorAdapter");
 
 export type GenerateSectionsOptions = {
   /**
@@ -56,7 +59,7 @@ export interface GeneratorAdapter {
     source,
     sections,
     rendererAdapter,
-    repositoryProvider
+    repositoryProvider,
   }: {
     source: string;
     sections: GenerateSectionsOptions;
