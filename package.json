@@ -19,7 +19,7 @@
   },
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "2.5.9",
+    "@biomejs/biome": "2.5.10",
     "@nx/js": "23.1.1",
     "@nx/vite": "23.1.1",
     "@nx/vitest": "23.1.1",
@@ -28,7 +28,7 @@
     "@swc/core": "~1.16.1",
     "@swc/helpers": "~0.5.23",
     "@types/mock-fs": "^4.13.4",
-    "@types/node": "26.2.0",
+    "@types/node": "26.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitest/coverage-v8": "^4.1.11",
     "@vitest/ui": "^4.1.11",
