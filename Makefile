@@ -6,6 +6,9 @@ help: ## Display help
 setup: ## Install dependencies
 	@pnpm i
 
+update-deps: ## Update pnpm dependencies interactively
+	@pnpm update --interactive --recursive --include-workspace-root --latest
+
 lint: ## Execute linting
 	@pnpm run lint
 	$(call run_linter,)
@@ -36,8 +39,9 @@ test:
 
 ci: ## Execute all formats and checks
 	$(MAKE) setup
-	$(MAKE) build
+	@pnpm audit --fix
 	$(MAKE) lint-fix
+	$(MAKE) build
 	$(MAKE) test
 
 docker-build: ## Build Docker image

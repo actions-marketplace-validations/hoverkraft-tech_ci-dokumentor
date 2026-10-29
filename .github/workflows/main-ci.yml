@@ -120,6 +120,8 @@ jobs:
         with:
           client-id: ${{ vars.CI_BOT_APP_CLIENT_ID }}
           private-key: ${{ secrets.CI_BOT_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - uses: hoverkraft-tech/ci-github-common/actions/create-and-merge-pull-request@3a27d31e9ccefbe9609cc9165017ed100ff34a22 # 0.38.0
         with:
@@ -134,6 +136,6 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@ed354ada70b9f518c2bb663e18a80041c2cf5156 # 0.27.1
+        uses: hoverkraft-tech/ci-github-publish/actions/deploy/github-pages@1ee0354c40e4cd0a46c69cbe305c74fc67338042 # 0.28.0
         with:
           build-path: packages/docs/build
